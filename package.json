@@ -1,5 +1,5 @@
 {
-  "name": "git-search-in-changes",
+	"name": "git-search-in-changes",
 	"displayName": "git search in changes",
 	"description": "",
 	"version": "0.0.1",
@@ -10,15 +10,16 @@
 		"Other"
 	],
 	"activationEvents": [
-        "onCommand:git-search-in-changes.helloWorld"
+		"onCommand:git-search-in-changes.helloWorld"
 	],
 	"main": "./extension.js",
 	"contributes": {
-		"commands": [{
-            "command": "git-search-in-changes.helloWorld",
-            "title": "Hello World"
-
-		}]
+		"commands": [
+			{
+				"command": "git-search-in-changes.helloWorld",
+				"title": "Hello World"
+			}
+		]
 	},
 	"scripts": {
 		"lint": "eslint .",
@@ -26,15 +27,14 @@
 		"test": "node ./test/runTest.js"
 	},
 	"devDependencies": {
-        "@types/vscode": "^1.52.0",
-        "@types/glob": "^7.1.3",
-        "@types/mocha": "^8.0.0",
-        "@types/node": "^14.0.27",
-        "eslint": "^7.6.0",
-        "glob": "^7.1.6",
-        "mocha": "^8.0.1",
-        "typescript": "^3.8.3",
-        "vscode-test": "^1.4.0"
-    }
-
+		"@types/glob": "^7.1.3",
+		"@types/mocha": "^8.0.0",
+		"@types/node": "^14.0.27",
+		"@types/vscode": "^1.52.0",
+		"eslint": "^7.6.0",
+		"glob": "^7.1.6",
+		"mocha": "^8.0.1",
+		"typescript": "^3.8.3",
+		"vscode-test": "^1.4.0"
+	}
 }
