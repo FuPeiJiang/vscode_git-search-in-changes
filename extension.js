@@ -6,7 +6,8 @@ const fs = require('fs')
 const child_process = require('child_process')
 const os = require('os')
 const path = require('path')
-const { forEachTrailingCommentRange } = require('typescript')
+const trash = require('trash')
+
 // var mkdirp = require('mkdirp')
 // var getDirName = path.dirname
 // this method is called when your extension is activated
@@ -24,7 +25,7 @@ function activate(context) {
 	// The command has been defined in the package.json file
 	// Now provide the implementation of the command with  registerCommand
 	// The commandId parameter must match the command field in package.json
-	let disposable = vscode.commands.registerCommand('git-search-in-changes.helloWorld', async function () {
+	let disposable = vscode.commands.registerCommand('git-search-in-changes.createFolder', async function () {
 		// The code you place here will be executed every time your command is executed
 		try {
 			const activeEditor = window.activeTextEditor
@@ -63,22 +64,81 @@ function activate(context) {
 				return
 			}
 			const tempDir = path.join(os.tmpdir(), "git-search-in-changes", repoName)
-			// console.log(tempDir)
 
-			/* const newFiles = child_process.execSync('git diff --name-only --diff-filter=A --cached', { cwd: gitRoot }).toString().slice(0, -1)
-			const arrNewFiles = newFiles.split("\n")
-			copyFiles(arrNewFiles,gitRoot,tempDir) */
+			// const tempDir = path.join(os.tmpdir(), "git-search-in-changes")
+			// const tempRepo = path.join(tempDir, repoName)
+			// console.log(tempDir);
+			// vscode.extensions.extensions.getExtension('extension1.id')
+			// vscode.extensions.getExtension()
+			console.log(tempDir)
+			await trash(tempDir)
+			// vscode.window.showInformationMessage("somehow")
 
-	/* 		var length = arrNewFiles.length
-			for (let i = 0; i < length; i++) {
-				// console.log(arrNewFiles[i])
-				// writeFile(path.join(tempDir, arrNewFiles[i]), "hello", 'utf-8')
-				copyFile(path.join(gitRoot, arrNewFiles[i]), path.join(tempDir, arrNewFiles[i]), 'utf-8')
-			} */
+			var newAr, deletedAr, changedAr
+			// let promises = []
+			const newFiles = child_process.execSync('git ls-files --others --exclude-standard', { cwd: gitRoot }).toString().slice(0, -1)
+			if (newFiles === "")
+				newAr = []
+			else
+				newAr = newFiles.split("\n")
+			// promises.push(new Promise((resolve) => {
+			// copyFiles(newFiles.split("\n"), gitRoot, tempDir)
+			// resolve()
+			// }))
 
-			const changedFiles = child_process.execSync('git diff --name-only', { cwd: gitRoot }).toString().slice(0, -1)
+			const deletedFiles = child_process.execSync('git ls-files --deleted', { cwd: gitRoot }).toString().slice(0, -1)
+			if (deletedFiles === "")
+				deletedAr = []
+			else
+				deletedAr = deletedFiles.split("\n")
+			// promises.push(new Promise((resolve) => {
+			// copyDeleted(deletedFiles.split("\n"), gitRoot, tempDir)
+			// resolve()
+			// }))
+
+			const changedFiles = child_process.execSync('git diff --name-only --diff-filter=M', { cwd: gitRoot }).toString().slice(0, -1)
+			if (changedFiles === "")
+				changedAr = []
+			else
+				changedAr = changedFiles.split("\n")
+			// promises.push(new Promise((resolve) => {
+			// twoFilesPerChanged(changedFiles.split("\n"), gitRoot, tempDir)
+			// resolve()
+			// }))
+			console.log(newAr)
+			console.log(deletedAr)
+			console.log(changedAr)
+			// return
+			await amalgamate(newAr, deletedAr, changedAr, gitRoot, tempDir)
+			// await Promise.all([copyFiles(newFiles.split("\n"), gitRoot, tempDir), copyDeleted(deletedFiles.split("\n"), gitRoot, tempDir), twoFilesPerChanged(changedFiles.split("\n"), gitRoot, tempDir)])
+
+			let uri = vscode.Uri.file(tempDir)
+			await vscode.commands.executeCommand('vscode.openFolder', uri, true)
+
+			// .then(async () => {
+			// let uri = vscode.Uri.file(tempDir)
+			// await vscode.commands.executeCommand('vscode.openFolder', uri, true)
+			// })
+
+			// Promise.all(promises).then(async () => {
+			// let uri = vscode.Uri.file(tempDir)
+			// await vscode.commands.executeCommand('vscode.openFolder', uri, true)
+			// })
+
+
+			// let success = await vscode.commands.executeCommand('vscode.openFolder', uri, true)
+			return
+
+			/* 		var length = arrNewFiles.length
+					for (let i = 0; i < length; i++) {
+						// console.log(arrNewFiles[i])
+						// writeFile(path.join(tempDir, arrNewFiles[i]), "hello", 'utf-8')
+						copyFile(path.join(gitRoot, arrNewFiles[i]), path.join(tempDir, arrNewFiles[i]), 'utf-8')
+					} */
+
+			/* const changedFiles = child_process.execSync('git diff --name-only', { cwd: gitRoot }).toString().slice(0, -1)
 			const arrChangedFiles = changedFiles.split("\n")
-			diffFiles(arrChangedFiles,gitRoot,tempDir)
+			diffFiles(arrChangedFiles, gitRoot, tempDir)
 			return
 			var length = arrChangedFiles.length
 			for (let i = 0; i < length; i++) {
@@ -88,11 +148,10 @@ function activate(context) {
 				// copyFile(path.join(gitRoot, arrNewFiles[i]), path.join(tempDir, arrNewFiles[i]), 'utf-8')
 			}
 
-return
+			return
 
-			let uri = vscode.Uri.file(tempDir)
-			let success = await vscode.commands.executeCommand('vscode.openFolder', uri, true)
-			console.log(success)
+
+			console.log(success) */
 			// success = await vscode.commands.executeCommand('workbench.view.search', uri, true)
 			// console.log(success)
 
@@ -144,85 +203,251 @@ module.exports = {
 // fs.writeFile(filePath, contents, cb)
 // })
 // }
-
-function diffFiles(arrNewFiles,gitRoot,tempDir) {
-	var length = arrNewFiles.length
-	for (let i = 0; i < length; i++) {
-		fs.readFile(path.join(gitRoot, arrNewFiles[i]), function (err, data) {
-			if (err) throw err
-
-			// const diffString = child_process.exec('git diff ' + fileName, { cwd: parentDir }).toString()
-
-			child_process.exec('git diff ' + arrNewFiles[i], { cwd: gitRoot }, (error, diffString) => {
-				if (error) {
-				  console.error(`exec error: ${error}`);
-				  return;
-				}
-return
-				const arr = diffString.split('\n')
-				const len = arr.length
-				var text, firstChar, wasMinus
-				var lineAddition = 0
-				// loop2fefef:
-				for (i = 4; i < len; i++) {
-					text = arr[i]
-					firstChar = text[0]
-					if (firstChar === "+") {
-						if (wasMinus) {
-							line--
-						}
-						lineAddition++
-					} else if (firstChar === "-") {
-						wasMinus = true
-						lineAddition--
-					} else if (firstChar === "@") {
-						var plusIdx = text.indexOf("+") + 1
-						line = parseInt(text.slice(plusIdx, text.indexOf(",", plusIdx)))
-						line -= 3
-					} else {
-						const plusTwo = line + 2
-						// console.log(currentRange[0], plusTwo - lineAddition)
-						if (currentRange[0] < plusTwo + lineAddition) {
-							// console.log(text)
-							console.log("WOW")
-							// console.log(lineAddition)
-							origRange = [currentRange[0] - lineAddition, currentRange[1] - lineAddition]
-							didSubstract = true
-							break
-						}
+/* 
+new Promise(async (resolve) => {
+	resolve()
+})
+ */
+function amalgamate(newFiles, deletedFiles, changedFiles, gitRoot, tempDir) {
+	return new Promise(async (resolve) => {
+		const promises = []
+		var length, i
+		length = newFiles.length
+		for (i = 0; i < length; i++) {
+			promises.push(new Promise((resolve2) => {
+				fs.readFile(path.join(gitRoot, newFiles[i]), async function (err, data) {
+					if (err) throw err
+					const plusName = path.join(path.dirname(newFiles[i]), "+" + path.basename(newFiles[i]))
+					await writeFile(path.join(tempDir, plusName), data, 'utf-8')
+					resolve2()
+				})
+			}))
+		}
+		length = deletedFiles.length
+		for (let i = 0; i < length; i++) {
+			promises.push(new Promise((resolve2) => {
+				child_process.exec('git show HEAD:' + deletedFiles[i], { cwd: gitRoot }, async (error, deletedContent) => {
+					if (error) {
+						console.error(`couldn't get last revision: ${error}`)
+						return
 					}
-					line++
 
-					// console.log("line:", line, "lineAddition", lineAddition, "text", text)
-				}
-				// console.log(diffString);
-			  })
+					const plusName = path.join(path.dirname(deletedFiles[i]), "-" + path.basename(deletedFiles[i]))
 
-			// writeFile(path.join(tempDir, arrNewFiles[i]), data, 'utf-8')
-		})
-	}
+					await writeFile(path.join(tempDir, plusName), deletedContent, 'utf-8')
+					resolve2()
+				})
+			}))
+		}
+		length = changedFiles.length
+		for (let i = 0; i < length; i++) {
+			promises.push(new Promise((resolve2) => {
+				child_process.exec('git --no-pager diff ' + changedFiles[i], { cwd: gitRoot }, async (error, diffStr) => {
+					if (error) {
+						console.error(`couldn't get last revision: ${error}`)
+						return
+					}
+					// console.log(diffStr)
+					const arr = diffStr.split("\n")
+					const len = arr.length
+
+					var text, firstChar, additionLine = 0, subtractionLine = 0, addMaxLine, subMaxLine
+					const addDict = {}, subDict = {}
+
+					for (let k = 4; k < len; k++) {
+						text = arr[k]
+						if (k === 4)
+							console.log(text)
+						firstChar = text[0]
+						// console.log(firstChar);
+						if (firstChar === "+") {
+							addDict[additionLine] = text.slice(1)
+							addMaxLine = additionLine
+							subtractionLine--
+						} else if (firstChar === "-") {
+							subDict[subtractionLine] = text.slice(1)
+							subMaxLine = subtractionLine
+							additionLine--
+						} else if (firstChar === "@") {
+							const minusIdx = text.indexOf("-") + 1
+							subtractionLine = parseInt(text.slice(minusIdx, text.indexOf(","))) - 2
+							// console.log(changedFiles[i])
+							// console.log(subtractionLine)
+							const plusIdx = text.indexOf("+") + 1
+							additionLine = parseInt(text.slice(plusIdx, text.indexOf(",", plusIdx))) - 2
+							// console.log(additionLine)
+
+						}
+						additionLine++
+						subtractionLine++
+					}
+					addMaxLine--; subMaxLine--
+					const addArr = [], subArr = []
+
+					for (let line = 4; line < addMaxLine; line++) {
+						addArr.push((line in addDict) ? addDict[line] : "")
+					}
+
+					for (let line = 4; line < subMaxLine; line++) {
+						subArr.push((line in subDict) ? subDict[line] : "")
+					}
+
+					console.log(addArr)
+					console.log(subArr)
+
+					const plusName = path.join(path.dirname(changedFiles[i]), "+" + path.basename(changedFiles[i]))
+					writeFile(path.join(tempDir, plusName), addArr.join("\n"), 'utf-8')
+
+					const minusName = path.join(path.dirname(changedFiles[i]), "-" + path.basename(changedFiles[i]))
+					await writeFile(path.join(tempDir, minusName), subArr.join("\n"), 'utf-8')
+					resolve2()
+				})
+			}))
+
+
+		}
+		await Promise.all(promises)
+		resolve()
+	})
+
 }
 
-function copyFiles(arrNewFiles,gitRoot,tempDir) {
-	var length = arrNewFiles.length
-	for (let i = 0; i < length; i++) {
-		fs.readFile(path.join(gitRoot, arrNewFiles[i]), function (err, data) {
-			if (err) throw err
-			
-			const plusName = path.join(path.dirname(arrNewFiles[i]),"+" + path.basename(arrNewFiles[i]))
+function copyFiles(arrNewFiles, gitRoot, tempDir) {
+	return new Promise(async (resolve) => {
+		const promises = []
 
-			writeFile(path.join(tempDir, plusName), data, 'utf-8')
-		})
-	}
+		const length = arrNewFiles.length
+		for (let i = 0; i < length; i++) {
+			promises.push(new Promise((resolve2) => {
+				fs.readFile(path.join(gitRoot, arrNewFiles[i]), async function (err, data) {
+					if (err) throw err
+
+					const plusName = path.join(path.dirname(arrNewFiles[i]), "+" + path.basename(arrNewFiles[i]))
+
+					writeFile(path.join(tempDir, plusName), data, 'utf-8')
+					await resolve2()
+				})
+			}))
+		}
+		await Promise.all(promises)
+		resolve()
+	})
+}
+
+
+function copyDeleted(arrNewFiles, gitRoot, tempDir) {
+	return new Promise(async (resolve) => {
+		const promises = []
+
+		const length = arrNewFiles.length
+		for (let i = 0; i < length; i++) {
+			promises.push(new Promise((resolve2) => {
+				child_process.exec('git show HEAD:' + arrNewFiles[i], { cwd: gitRoot }, (error, deletedContent) => {
+					if (error) {
+						console.error(`couldn't get last revision: ${error}`)
+						return
+					}
+
+					const plusName = path.join(path.dirname(arrNewFiles[i]), "-" + path.basename(arrNewFiles[i]))
+
+					writeFile(path.join(tempDir, plusName), deletedContent, 'utf-8')
+				})
+				resolve2()
+			}))
+		}
+		await Promise.all(promises)
+		resolve()
+	})
+}
+
+
+function twoFilesPerChanged(arrNewFiles, gitRoot, tempDir) {
+	return new Promise(async (resolve) => {
+		const promises = []
+
+		const length = arrNewFiles.length
+		for (let i = 0; i < length; i++) {
+
+			promises.push(new Promise((resolve2) => {
+				child_process.exec('git --no-pager diff ' + arrNewFiles[i], { cwd: gitRoot }, (error, diffStr) => {
+					if (error) {
+						console.error(`couldn't get last revision: ${error}`)
+						return
+					}
+					// console.log(diffStr)
+					const arr = diffStr.split("\n")
+					const len = arr.length
+
+					var text, firstChar, additionLine = 0, subtractionLine = 0, addMaxLine, subMaxLine
+					const addDict = {}, subDict = {}
+
+					for (let k = 4; k < len; k++) {
+
+						text = arr[k]
+						if (k === 4)
+							console.log(text)
+						firstChar = text[0]
+						// console.log(firstChar);
+						if (firstChar === "+") {
+							addDict[additionLine] = text.slice(1)
+							addMaxLine = additionLine
+							subtractionLine--
+						} else if (firstChar === "-") {
+							subDict[subtractionLine] = text.slice(1)
+							subMaxLine = subtractionLine
+							additionLine--
+						} else if (firstChar === "@") {
+							const minusIdx = text.indexOf("-") + 1
+							subtractionLine = parseInt(text.slice(minusIdx, text.indexOf(","))) - 2
+							// console.log(arrNewFiles[i])
+							// console.log(subtractionLine)
+							const plusIdx = text.indexOf("+") + 1
+							additionLine = parseInt(text.slice(plusIdx, text.indexOf(",", plusIdx))) - 2
+							// console.log(additionLine)
+
+						}
+						additionLine++
+						subtractionLine++
+					}
+					addMaxLine--; subMaxLine--
+					const addArr = [], subArr = []
+
+					for (let line = 4; line < addMaxLine; line++) {
+						addArr.push((line in addDict) ? addDict[line] : "")
+					}
+
+					for (let line = 4; line < subMaxLine; line++) {
+						subArr.push((line in subDict) ? subDict[line] : "")
+					}
+
+					console.log(addArr)
+					console.log(subArr)
+
+					const plusName = path.join(path.dirname(arrNewFiles[i]), "+" + path.basename(arrNewFiles[i]))
+					writeFile(path.join(tempDir, plusName), addArr.join("\n"), 'utf-8')
+
+					const minusName = path.join(path.dirname(arrNewFiles[i]), "-" + path.basename(arrNewFiles[i]))
+					writeFile(path.join(tempDir, minusName), subArr.join("\n"), 'utf-8')
+				})
+				resolve2()
+			}))
+
+
+		}
+		await Promise.all(promises)
+		resolve()
+	})
+
+
 }
 
 // function copyFile(readPath, writePath, encoding) {
-	// fs.readFile(readPath, encoding, function (err, data) {
-		// if (err) throw err
-		// writeFile(writePath, data, encoding)
-	// })
+// fs.readFile(readPath, encoding, function (err, data) {
+// if (err) throw err
+// writeFile(writePath, data, encoding)
+// })
 // }
 
 function writeFile(filePath, contents, encoding) {
-	fs.promises.mkdir(path.dirname(filePath), { recursive: true }).then(x => fs.promises.writeFile(filePath, contents, encoding))
+	fs.promises.mkdir(path.dirname(filePath), { recursive: true }).then(() => fs.promises.writeFile(filePath, contents, encoding))
 }

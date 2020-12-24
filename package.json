@@ -10,14 +10,14 @@
 		"Other"
 	],
 	"activationEvents": [
-		"onCommand:git-search-in-changes.helloWorld"
+		"onCommand:git-search-in-changes.createFolder"
 	],
 	"main": "./extension.js",
 	"contributes": {
 		"commands": [
 			{
-				"command": "git-search-in-changes.helloWorld",
-				"title": "Hello World"
+				"command": "git-search-in-changes.createFolder",
+				"title": "git-search-in-changes: create Diff Folder"
 			}
 		]
 	},
@@ -36,5 +36,8 @@
 		"mocha": "^8.0.1",
 		"typescript": "^3.8.3",
 		"vscode-test": "^1.4.0"
+	},
+	"dependencies": {
+		"trash": "^7.0.0"
 	}
 }
