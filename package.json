@@ -1,11 +1,16 @@
 {
 	"name": "git-search-in-changes",
 	"displayName": "git search in changes",
-	"description": "",
+	"description": "create Diff Folder so you can search in many files using vscode",
+	"publisher": "FuPeiJiang",
 	"version": "0.0.1",
 	"engines": {
 		"vscode": "^1.52.0"
 	},
+	"repository": {
+        "type": "git",
+        "url": "https://github.com/FuPeiJiang/vscode_git-search-in-changes"
+    },
 	"categories": [
 		"Other"
 	],
@@ -38,6 +43,7 @@
 		"vscode-test": "^1.4.0"
 	},
 	"dependencies": {
-		"trash": "^7.0.0"
+		"trash": "^7.0.0",
+		"vsce": "^1.83.0"
 	}
 }
