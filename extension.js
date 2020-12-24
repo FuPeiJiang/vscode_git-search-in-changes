@@ -6,8 +6,9 @@ const fs = require('fs')
 const child_process = require('child_process')
 const os = require('os')
 const path = require('path')
-var mkdirp = require('mkdirp');
-var getDirName = path.dirname;
+const { forEachTrailingCommentRange } = require('typescript')
+// var mkdirp = require('mkdirp')
+// var getDirName = path.dirname
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 
@@ -61,18 +62,47 @@ function activate(context) {
 				vscode.window.showInformationMessage("path is not a dir and has no parent dir")
 				return
 			}
-			const tempDir = path.join(os.tmpdir(), repoName)
-			console.log(tempDir);
-			// fs.writeFileSync(path.join(tempDir, "folder1", "ok.txt"), "hello", 'utf-8')
-			writeFile(path.join(tempDir, "folder1", "ok.txt"), "hello", 'utf-8')
+			const tempDir = path.join(os.tmpdir(), "git-search-in-changes", repoName)
+			// console.log(tempDir)
+
+			/* const newFiles = child_process.execSync('git diff --name-only --diff-filter=A --cached', { cwd: gitRoot }).toString().slice(0, -1)
+			const arrNewFiles = newFiles.split("\n")
+			copyFiles(arrNewFiles,gitRoot,tempDir) */
+
+	/* 		var length = arrNewFiles.length
+			for (let i = 0; i < length; i++) {
+				// console.log(arrNewFiles[i])
+				// writeFile(path.join(tempDir, arrNewFiles[i]), "hello", 'utf-8')
+				copyFile(path.join(gitRoot, arrNewFiles[i]), path.join(tempDir, arrNewFiles[i]), 'utf-8')
+			} */
+
+			const changedFiles = child_process.execSync('git diff --name-only', { cwd: gitRoot }).toString().slice(0, -1)
+			const arrChangedFiles = changedFiles.split("\n")
+			diffFiles(arrChangedFiles,gitRoot,tempDir)
+			return
+			var length = arrChangedFiles.length
+			for (let i = 0; i < length; i++) {
+				const diffString = child_process.execSync('git diff ' + fileName, { cwd: parentDir }).toString()
+
+
+				// copyFile(path.join(gitRoot, arrNewFiles[i]), path.join(tempDir, arrNewFiles[i]), 'utf-8')
+			}
+
+return
+
+			let uri = vscode.Uri.file(tempDir)
+			let success = await vscode.commands.executeCommand('vscode.openFolder', uri, true)
+			console.log(success)
+			// success = await vscode.commands.executeCommand('workbench.view.search', uri, true)
+			// console.log(success)
+
+			// writeFile(path.join(tempDir, "folder1", "ok"), "hello", 'utf-8')
 			return
 			// tempDir = 
 
 			// console.log(gitRoot)
 			// vscode.window.showInformationMessage(gitRoot)
 
-			const changedFiles = child_process.execSync('git diff --name-only', { cwd: gitRoot }).toString().slice(0, -1)
-			const newFiles = child_process.execSync('git diff --name-only --diff-filter=A --cached', { cwd: gitRoot }).toString().slice(0, -1)
 
 			// const tempDir = os.tmpdir()
 
@@ -108,10 +138,91 @@ module.exports = {
 	deactivate
 }
 
-function writeFile(path, contents, cb) {
-	mkdirp(getDirName(path), function (err) {
-	  if (err) return cb(err);
-  
-	  fs.writeFile(path, contents, cb);
-	});
+// function writeFile(filePath, contents, cb) {
+// mkdirp(getDirName(filePath), (err) => {
+// if (err) return cb(err)
+// fs.writeFile(filePath, contents, cb)
+// })
+// }
+
+function diffFiles(arrNewFiles,gitRoot,tempDir) {
+	var length = arrNewFiles.length
+	for (let i = 0; i < length; i++) {
+		fs.readFile(path.join(gitRoot, arrNewFiles[i]), function (err, data) {
+			if (err) throw err
+
+			// const diffString = child_process.exec('git diff ' + fileName, { cwd: parentDir }).toString()
+
+			child_process.exec('git diff ' + arrNewFiles[i], { cwd: gitRoot }, (error, diffString) => {
+				if (error) {
+				  console.error(`exec error: ${error}`);
+				  return;
+				}
+return
+				const arr = diffString.split('\n')
+				const len = arr.length
+				var text, firstChar, wasMinus
+				var lineAddition = 0
+				// loop2fefef:
+				for (i = 4; i < len; i++) {
+					text = arr[i]
+					firstChar = text[0]
+					if (firstChar === "+") {
+						if (wasMinus) {
+							line--
+						}
+						lineAddition++
+					} else if (firstChar === "-") {
+						wasMinus = true
+						lineAddition--
+					} else if (firstChar === "@") {
+						var plusIdx = text.indexOf("+") + 1
+						line = parseInt(text.slice(plusIdx, text.indexOf(",", plusIdx)))
+						line -= 3
+					} else {
+						const plusTwo = line + 2
+						// console.log(currentRange[0], plusTwo - lineAddition)
+						if (currentRange[0] < plusTwo + lineAddition) {
+							// console.log(text)
+							console.log("WOW")
+							// console.log(lineAddition)
+							origRange = [currentRange[0] - lineAddition, currentRange[1] - lineAddition]
+							didSubstract = true
+							break
+						}
+					}
+					line++
+
+					// console.log("line:", line, "lineAddition", lineAddition, "text", text)
+				}
+				// console.log(diffString);
+			  })
+
+			// writeFile(path.join(tempDir, arrNewFiles[i]), data, 'utf-8')
+		})
+	}
+}
+
+function copyFiles(arrNewFiles,gitRoot,tempDir) {
+	var length = arrNewFiles.length
+	for (let i = 0; i < length; i++) {
+		fs.readFile(path.join(gitRoot, arrNewFiles[i]), function (err, data) {
+			if (err) throw err
+			
+			const plusName = path.join(path.dirname(arrNewFiles[i]),"+" + path.basename(arrNewFiles[i]))
+
+			writeFile(path.join(tempDir, plusName), data, 'utf-8')
+		})
+	}
+}
+
+// function copyFile(readPath, writePath, encoding) {
+	// fs.readFile(readPath, encoding, function (err, data) {
+		// if (err) throw err
+		// writeFile(writePath, data, encoding)
+	// })
+// }
+
+function writeFile(filePath, contents, encoding) {
+	fs.promises.mkdir(path.dirname(filePath), { recursive: true }).then(x => fs.promises.writeFile(filePath, contents, encoding))
 }
