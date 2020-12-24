@@ -208,103 +208,117 @@ new Promise(async (resolve) => {
 	resolve()
 })
  */
+
+
 function amalgamate(newFiles, deletedFiles, changedFiles, gitRoot, tempDir) {
+	function addPromise(i) {
+		return new Promise((resolve2) => {
+			fs.readFile(path.join(gitRoot, newFiles[i]), async function (err, data) {
+				if (err) throw err
+				if (newFiles[i] === undefined) {
+					console.log(undefined)
+					console.log(newFiles)
+					console.log(i)
+				} else {
+					const plusName = path.join(path.dirname(newFiles[i]), "+" + path.basename(newFiles[i]))
+					await writeFile(path.join(tempDir, plusName), data, 'utf-8')
+				}
+				resolve2()
+			})
+		})
+	}
+	function minusPromise(i) {
+		return new Promise((resolve2) => {
+			child_process.exec('git show HEAD:"' + deletedFiles[i] + '"0', { cwd: gitRoot }, async (error, deletedContent) => {
+				if (error) {
+					console.error(`couldn't get last revision: ${error}`)
+					return
+				}
+				const plusName = path.join(path.dirname(deletedFiles[i]), "-" + path.basename(deletedFiles[i]))
+
+				await writeFile(path.join(tempDir, plusName), deletedContent, 'utf-8')
+				resolve2()
+			})
+		})
+	}
+	function changedPromise(i) {
+		return new Promise((resolve2) => {
+			child_process.exec('git --no-pager diff "' + changedFiles[i] + '"', { cwd: gitRoot }, async (error, diffStr) => {
+				if (error) {
+					console.error(`couldn't get last revision: ${error}`)
+					return
+				}
+				// console.log(diffStr)
+				const arr = diffStr.split("\n")
+				const len = arr.length
+
+				var text, firstChar, additionLine = 0, subtractionLine = 0, addMaxLine, subMaxLine
+				const addDict = {}, subDict = {}
+
+				for (let k = 4; k < len; k++) {
+					text = arr[k]
+					if (k === 4)
+						console.log(text)
+					firstChar = text[0]
+					// console.log(firstChar);
+					if (firstChar === "+") {
+						addDict[additionLine] = text.slice(1)
+						addMaxLine = additionLine
+						subtractionLine--
+					} else if (firstChar === "-") {
+						subDict[subtractionLine] = text.slice(1)
+						subMaxLine = subtractionLine
+						additionLine--
+					} else if (firstChar === "@") {
+						const minusIdx = text.indexOf("-") + 1
+						subtractionLine = parseInt(text.slice(minusIdx, text.indexOf(","))) - 2
+						// console.log(changedFiles[i])
+						// console.log(subtractionLine)
+						const plusIdx = text.indexOf("+") + 1
+						additionLine = parseInt(text.slice(plusIdx, text.indexOf(",", plusIdx))) - 2
+						// console.log(additionLine)
+
+					}
+					additionLine++
+					subtractionLine++
+				}
+				addMaxLine--; subMaxLine--
+				const addArr = [], subArr = []
+
+				for (let line = 4; line < addMaxLine; line++) {
+					addArr.push((line in addDict) ? addDict[line] : "")
+				}
+
+				for (let line = 4; line < subMaxLine; line++) {
+					subArr.push((line in subDict) ? subDict[line] : "")
+				}
+
+				console.log(addArr)
+				console.log(subArr)
+
+				const plusName = path.join(path.dirname(changedFiles[i]), "+" + path.basename(changedFiles[i]))
+				writeFile(path.join(tempDir, plusName), addArr.join("\n"), 'utf-8')
+
+				const minusName = path.join(path.dirname(changedFiles[i]), "-" + path.basename(changedFiles[i]))
+				await writeFile(path.join(tempDir, minusName), subArr.join("\n"), 'utf-8')
+				resolve2()
+			})
+		})
+	}
 	return new Promise(async (resolve) => {
 		const promises = []
 		var length, i
 		length = newFiles.length
 		for (i = 0; i < length; i++) {
-			promises.push(new Promise((resolve2) => {
-				fs.readFile(path.join(gitRoot, newFiles[i]), async function (err, data) {
-					if (err) throw err
-					const plusName = path.join(path.dirname(newFiles[i]), "+" + path.basename(newFiles[i]))
-					await writeFile(path.join(tempDir, plusName), data, 'utf-8')
-					resolve2()
-				})
-			}))
+			promises.push(addPromise(i))
 		}
 		length = deletedFiles.length
 		for (let i = 0; i < length; i++) {
-			promises.push(new Promise((resolve2) => {
-				child_process.exec('git show HEAD:' + deletedFiles[i], { cwd: gitRoot }, async (error, deletedContent) => {
-					if (error) {
-						console.error(`couldn't get last revision: ${error}`)
-						return
-					}
-
-					const plusName = path.join(path.dirname(deletedFiles[i]), "-" + path.basename(deletedFiles[i]))
-
-					await writeFile(path.join(tempDir, plusName), deletedContent, 'utf-8')
-					resolve2()
-				})
-			}))
+			promises.push(minusPromise(i))
 		}
 		length = changedFiles.length
 		for (let i = 0; i < length; i++) {
-			promises.push(new Promise((resolve2) => {
-				child_process.exec('git --no-pager diff ' + changedFiles[i], { cwd: gitRoot }, async (error, diffStr) => {
-					if (error) {
-						console.error(`couldn't get last revision: ${error}`)
-						return
-					}
-					// console.log(diffStr)
-					const arr = diffStr.split("\n")
-					const len = arr.length
-
-					var text, firstChar, additionLine = 0, subtractionLine = 0, addMaxLine, subMaxLine
-					const addDict = {}, subDict = {}
-
-					for (let k = 4; k < len; k++) {
-						text = arr[k]
-						if (k === 4)
-							console.log(text)
-						firstChar = text[0]
-						// console.log(firstChar);
-						if (firstChar === "+") {
-							addDict[additionLine] = text.slice(1)
-							addMaxLine = additionLine
-							subtractionLine--
-						} else if (firstChar === "-") {
-							subDict[subtractionLine] = text.slice(1)
-							subMaxLine = subtractionLine
-							additionLine--
-						} else if (firstChar === "@") {
-							const minusIdx = text.indexOf("-") + 1
-							subtractionLine = parseInt(text.slice(minusIdx, text.indexOf(","))) - 2
-							// console.log(changedFiles[i])
-							// console.log(subtractionLine)
-							const plusIdx = text.indexOf("+") + 1
-							additionLine = parseInt(text.slice(plusIdx, text.indexOf(",", plusIdx))) - 2
-							// console.log(additionLine)
-
-						}
-						additionLine++
-						subtractionLine++
-					}
-					addMaxLine--; subMaxLine--
-					const addArr = [], subArr = []
-
-					for (let line = 4; line < addMaxLine; line++) {
-						addArr.push((line in addDict) ? addDict[line] : "")
-					}
-
-					for (let line = 4; line < subMaxLine; line++) {
-						subArr.push((line in subDict) ? subDict[line] : "")
-					}
-
-					console.log(addArr)
-					console.log(subArr)
-
-					const plusName = path.join(path.dirname(changedFiles[i]), "+" + path.basename(changedFiles[i]))
-					writeFile(path.join(tempDir, plusName), addArr.join("\n"), 'utf-8')
-
-					const minusName = path.join(path.dirname(changedFiles[i]), "-" + path.basename(changedFiles[i]))
-					await writeFile(path.join(tempDir, minusName), subArr.join("\n"), 'utf-8')
-					resolve2()
-				})
-			}))
-
-
+			promises.push(changedPromise(i))
 		}
 		await Promise.all(promises)
 		resolve()
@@ -369,7 +383,7 @@ function twoFilesPerChanged(arrNewFiles, gitRoot, tempDir) {
 		for (let i = 0; i < length; i++) {
 
 			promises.push(new Promise((resolve2) => {
-				child_process.exec('git --no-pager diff ' + arrNewFiles[i], { cwd: gitRoot }, (error, diffStr) => {
+				child_process.exec('git --no-pager diff "' + arrNewFiles[i] + '"', { cwd: gitRoot }, (error, diffStr) => {
 					if (error) {
 						console.error(`couldn't get last revision: ${error}`)
 						return
