@@ -20,7 +20,6 @@ function activate(context) {
 
 	// Use the console to output diagnostic information (console.log) and errors (console.error)
 	// This line of code will only be executed once when your extension is activated
-	console.log('Congratulations, your extension "git-search-in-changes" is now active!')
 
 	// The command has been defined in the package.json file
 	// Now provide the implementation of the command with  registerCommand
@@ -70,10 +69,11 @@ function activate(context) {
 			// console.log(tempDir);
 			// vscode.extensions.extensions.getExtension('extension1.id')
 			// vscode.extensions.getExtension()
-			console.log(tempDir + "\\")
+
+			// console.log(tempDir + "\\")
 			await trash([tempDir + "\\"])
-			console.log("moved to trash")
-		
+			// console.log("moved to trash")
+
 			// vscode.window.showInformationMessage("somehow")
 
 			var newAr, deletedAr, changedAr
@@ -107,9 +107,9 @@ function activate(context) {
 			// twoFilesPerChanged(changedFiles.split("\n"), gitRoot, tempDir)
 			// resolve()
 			// }))
-			console.log(newAr)
-			console.log(deletedAr)
-			console.log(changedAr)
+			// console.log(newAr)
+			// console.log(deletedAr)
+			// console.log(changedAr)
 			// return
 			await amalgamate(newAr, deletedAr, changedAr, gitRoot, tempDir)
 			// await Promise.all([copyFiles(newFiles.split("\n"), gitRoot, tempDir), copyDeleted(deletedFiles.split("\n"), gitRoot, tempDir), twoFilesPerChanged(changedFiles.split("\n"), gitRoot, tempDir)])
@@ -219,14 +219,8 @@ function amalgamate(newFiles, deletedFiles, changedFiles, gitRoot, tempDir) {
 		return new Promise((resolve2) => {
 			fs.readFile(path.join(gitRoot, newFiles[i]), async function (err, data) {
 				if (err) throw err
-				if (newFiles[i] === undefined) {
-					console.log(undefined)
-					console.log(newFiles)
-					console.log(i)
-				} else {
-					const plusName = path.join(path.dirname(newFiles[i]), "+" + path.basename(newFiles[i]))
-					await writeFile(path.join(tempDir, plusName), data, 'utf-8')
-				}
+				const plusName = path.join(path.dirname(newFiles[i]), "+" + path.basename(newFiles[i]))
+				await writeFile(path.join(tempDir, plusName), data, 'utf-8')
 				resolve2()
 			})
 		})
@@ -297,8 +291,8 @@ function amalgamate(newFiles, deletedFiles, changedFiles, gitRoot, tempDir) {
 					subArr.push((line in subDict) ? subDict[line] : "")
 				}
 
-				console.log(addArr)
-				console.log(subArr)
+				// console.log(addArr)
+				// console.log(subArr)
 
 				const plusName = path.join(path.dirname(changedFiles[i]), "+" + path.basename(changedFiles[i]))
 				writeFile(path.join(tempDir, plusName), addArr.join("\n"), 'utf-8')
@@ -402,8 +396,6 @@ function twoFilesPerChanged(arrNewFiles, gitRoot, tempDir) {
 					for (let k = 4; k < len; k++) {
 
 						text = arr[k]
-						if (k === 4)
-							console.log(text)
 						firstChar = text[0]
 						// console.log(firstChar);
 						if (firstChar === "+") {
@@ -438,8 +430,8 @@ function twoFilesPerChanged(arrNewFiles, gitRoot, tempDir) {
 						subArr.push((line in subDict) ? subDict[line] : "")
 					}
 
-					console.log(addArr)
-					console.log(subArr)
+					// console.log(addArr)
+					// console.log(subArr)
 
 					const plusName = path.join(path.dirname(arrNewFiles[i]), "+" + path.basename(arrNewFiles[i]))
 					writeFile(path.join(tempDir, plusName), addArr.join("\n"), 'utf-8')
