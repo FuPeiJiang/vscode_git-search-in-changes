@@ -70,8 +70,10 @@ function activate(context) {
 			// console.log(tempDir);
 			// vscode.extensions.extensions.getExtension('extension1.id')
 			// vscode.extensions.getExtension()
-			console.log(tempDir)
-			await trash(tempDir)
+			console.log(tempDir + "\\")
+			await trash([tempDir + "\\"])
+			console.log("moved to trash")
+		
 			// vscode.window.showInformationMessage("somehow")
 
 			var newAr, deletedAr, changedAr
@@ -177,7 +179,9 @@ function activate(context) {
 			if (strError.includes("Error: ENOENT: no such file or directory")) {
 				vscode.window.showInformationMessage("path is not a dir and has no parent dir")
 				console.log(strError)
+				return
 			}
+			console.log(strError)
 
 			// console.log(error.toString())
 			// vscode.window.showInformationMessage(gitRoot)
