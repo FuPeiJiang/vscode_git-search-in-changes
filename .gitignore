@@ -3,4 +3,5 @@ node_modules
 *.vsix
 dist/**
 !dist/windows-trash.exe
+!dist/macos-trash
 yarn-error.log
