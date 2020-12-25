@@ -8,25 +8,28 @@
 		"vscode": "^1.52.0"
 	},
 	"repository": {
-        "type": "git",
-        "url": "https://github.com/FuPeiJiang/vscode_git-search-in-changes"
-    },
+		"type": "git",
+		"url": "https://github.com/FuPeiJiang/vscode_git-search-in-changes"
+	},
 	"categories": [
 		"Other"
 	],
 	"activationEvents": [
 		"onCommand:git-search-in-changes.createFolder"
 	],
-	"main": "./extension.js",
+	"main": "./dist/extension.js",
 	"contributes": {
-		"commands": [
-			{
-				"command": "git-search-in-changes.createFolder",
-				"title": "git-search-in-changes: create Diff Folder"
-			}
-		]
+		"commands": [{
+			"command": "git-search-in-changes.createFolder",
+			"title": "git-search-in-changes: create Diff Folder"
+		}]
 	},
 	"scripts": {
+		"vsix": "webpack --mode production && vsce package -o git-search-in-changes.vsix",
+		"package": "vsce package -o git-search-in-changes.vsix",
+		"webpack:prod": "webpack --mode production",
+		"webpack": "webpack --mode development",
+		"webpack-dev": "webpack --mode development --watch",
 		"lint": "eslint .",
 		"pretest": "yarn run lint",
 		"test": "node ./test/runTest.js"
@@ -39,11 +42,14 @@
 		"eslint": "^7.6.0",
 		"glob": "^7.1.6",
 		"mocha": "^8.0.1",
+		"ts-loader": "^8.0.12",
 		"typescript": "^3.8.3",
-		"vscode-test": "^1.4.0"
+		"vsce": "^1.83.0",
+		"vscode-test": "^1.4.0",
+		"webpack": "^5.11.0",
+		"webpack-cli": "^4.2.0"
 	},
 	"dependencies": {
-		"trash": "^7.0.0",
-		"vsce": "^1.83.0"
+		"trash": "^7.0.0"
 	}
 }

@@ -6,5 +6,11 @@ vsc-extension-quickstart.md
 **/jsconfig.json
 **/*.map
 **/.eslintrc.json
+node_modules/**
+
+extension.js
+webpack.config.js
+webpack.configgg.jsfef
+yarn-error.log
 
 README_bak.md
