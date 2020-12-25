@@ -7,6 +7,6 @@
 `code --install-extension git-search-in-changes.vsix`\
 install from git-search-in-changes.vsix
 ___
-### folder created at \${temp}/\${repoName}<br/>
+### folder created at \${temp}/git-search-in-changes/\${repoName}<br/>
 `temp=os.tmpdir()`\
 `repoName=git rev-parse --show-toplevel`
