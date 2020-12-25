@@ -50,102 +50,31 @@ function activate(context) {
 			await trash(tempDir)
 
 			var newAr, deletedAr, changedAr
-			// let promises = []
 			const newFiles = child_process.execSync('git ls-files --others --exclude-standard', { cwd: gitRoot }).toString().slice(0, -1)
 			if (newFiles === "")
 				newAr = []
 			else
 				newAr = newFiles.split("\n")
-			// promises.push(new Promise((resolve) => {
-			// copyFiles(newFiles.split("\n"), gitRoot, tempDir)
-			// resolve()
-			// }))
 
 			const deletedFiles = child_process.execSync('git ls-files --deleted', { cwd: gitRoot }).toString().slice(0, -1)
 			if (deletedFiles === "")
 				deletedAr = []
 			else
 				deletedAr = deletedFiles.split("\n")
-			// promises.push(new Promise((resolve) => {
-			// copyDeleted(deletedFiles.split("\n"), gitRoot, tempDir)
-			// resolve()
-			// }))
 
 			const changedFiles = child_process.execSync('git diff --name-only --diff-filter=M', { cwd: gitRoot }).toString().slice(0, -1)
 			if (changedFiles === "")
 				changedAr = []
 			else
 				changedAr = changedFiles.split("\n")
-			// promises.push(new Promise((resolve) => {
-			// twoFilesPerChanged(changedFiles.split("\n"), gitRoot, tempDir)
-			// resolve()
-			// }))
-			// console.log(newAr)
-			// console.log(deletedAr)
-			// console.log(changedAr)
-			// return
-			await amalgamate(newAr, deletedAr, changedAr, gitRoot, tempDir)
-			// await Promise.all([copyFiles(newFiles.split("\n"), gitRoot, tempDir), copyDeleted(deletedFiles.split("\n"), gitRoot, tempDir), twoFilesPerChanged(changedFiles.split("\n"), gitRoot, tempDir)])
+
+				await amalgamate(newAr, deletedAr, changedAr, gitRoot, tempDir)
 
 			let uri = vscode.Uri.file(tempDir)
 			await vscode.commands.executeCommand('vscode.openFolder', uri, true)
 
-			// .then(async () => {
-			// let uri = vscode.Uri.file(tempDir)
-			// await vscode.commands.executeCommand('vscode.openFolder', uri, true)
-			// })
-
-			// Promise.all(promises).then(async () => {
-			// let uri = vscode.Uri.file(tempDir)
-			// await vscode.commands.executeCommand('vscode.openFolder', uri, true)
-			// })
-
-
-			// let success = await vscode.commands.executeCommand('vscode.openFolder', uri, true)
-			return
-
-			/* 		var length = arrNewFiles.length
-					for (let i = 0; i < length; i++) {
-						// console.log(arrNewFiles[i])
-						// writeFile(path.join(tempDir, arrNewFiles[i]), "hello", 'utf-8')
-						copyFile(path.join(gitRoot, arrNewFiles[i]), path.join(tempDir, arrNewFiles[i]), 'utf-8')
-					} */
-
-			/* const changedFiles = child_process.execSync('git diff --name-only', { cwd: gitRoot }).toString().slice(0, -1)
-			const arrChangedFiles = changedFiles.split("\n")
-			diffFiles(arrChangedFiles, gitRoot, tempDir)
-			return
-			var length = arrChangedFiles.length
-			for (let i = 0; i < length; i++) {
-				const diffString = child_process.execSync('git diff ' + fileName, { cwd: parentDir }).toString()
-
-
-				// copyFile(path.join(gitRoot, arrNewFiles[i]), path.join(tempDir, arrNewFiles[i]), 'utf-8')
-			}
-
-			return
-
-
-			console.log(success) */
 			// success = await vscode.commands.executeCommand('workbench.view.search', uri, true)
-			// console.log(success)
 
-			// writeFile(path.join(tempDir, "folder1", "ok"), "hello", 'utf-8')
-			return
-			// tempDir = 
-
-			// console.log(gitRoot)
-			// vscode.window.showInformationMessage(gitRoot)
-
-
-			// const tempDir = os.tmpdir()
-
-			console.log(changedFiles)
-			console.log(newFiles)
-
-			// vscode.window.showInformationMessage(input)
-			// input
-			// git rev-parse --show-toplevel
 		} catch (error) {
 			const strError = error.toString()
 			if (strError.includes("Error: ENOENT: no such file or directory")) {
