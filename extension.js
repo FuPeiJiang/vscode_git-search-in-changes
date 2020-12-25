@@ -1,5 +1,3 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
 const vscode = require('vscode')
 const window = vscode.window
 const fs = require('fs')
@@ -8,22 +6,12 @@ const os = require('os')
 const path = require('path')
 const trash = require('trash')
 
-// this method is called when your extension is activated
-// your extension is activated the very first time the command is executed
-
 /**
  * @param {vscode.ExtensionContext} context
  */
 function activate(context) {
 
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
-
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with  registerCommand
-	// The commandId parameter must match the command field in package.json
 	let disposable = vscode.commands.registerCommand('git-search-in-changes.createFolder', async function () {
-		// The code you place here will be executed every time your command is executed
 		try {
 			const activeEditor = window.activeTextEditor
 			var fullPath
@@ -31,12 +19,10 @@ function activate(context) {
 				const document = activeEditor.document
 
 				fullPath = document.fileName.replace(/\\/g, '/')
-				// console.log(fullPath)
 			}
 
 
 			const input = await window.showInputBox({ value: fullPath, prompt: "git repo path or subpath" })
-			// const input = await vscode.window.showInputBox({placeHolder:"hehoeheh",prompt:"git repo path or subpath"})
 			var dirToCheck, lastSlash
 			if (fs.lstatSync(input).isDirectory()) {
 				dirToCheck = input
@@ -49,7 +35,6 @@ function activate(context) {
 					return
 				}
 			}
-			// console.log(dirToCheck);
 
 			const gitRoot = child_process.execSync('git rev-parse --show-toplevel', { cwd: dirToCheck }).toString().slice(0, -1)
 			var repoName
@@ -62,17 +47,7 @@ function activate(context) {
 			}
 			const tempDir = path.join(os.tmpdir(), "git-search-in-changes", repoName)
 
-			// const tempDir = path.join(os.tmpdir(), "git-search-in-changes")
-			// const tempRepo = path.join(tempDir, repoName)
-			// console.log(tempDir);
-			// vscode.extensions.extensions.getExtension('extension1.id')
-			// vscode.extensions.getExtension()
-
-			// console.log(tempDir + "\\")
-			await trash([tempDir + "\\"])
-			// console.log("moved to trash")
-
-			// vscode.window.showInformationMessage("somehow")
+			await trash(tempDir)
 
 			var newAr, deletedAr, changedAr
 			// let promises = []
@@ -172,7 +147,6 @@ function activate(context) {
 			// input
 			// git rev-parse --show-toplevel
 		} catch (error) {
-			// console.log(typeof error);
 			const strError = error.toString()
 			if (strError.includes("Error: ENOENT: no such file or directory")) {
 				vscode.window.showInformationMessage("path is not a dir and has no parent dir")
@@ -180,9 +154,6 @@ function activate(context) {
 				return
 			}
 			console.log(strError)
-
-			// console.log(error.toString())
-			// vscode.window.showInformationMessage(gitRoot)
 		}
 
 
@@ -191,7 +162,6 @@ function activate(context) {
 	context.subscriptions.push(disposable)
 }
 
-// this method is called when your extension is deactivated
 function deactivate() { }
 
 module.exports = {
@@ -205,7 +175,6 @@ new Promise(async (resolve) => {
 	resolve()
 })
  */
-
 
 function amalgamate(newFiles, deletedFiles, changedFiles, gitRoot, tempDir) {
 	function addPromise(i) {
@@ -225,9 +194,8 @@ function amalgamate(newFiles, deletedFiles, changedFiles, gitRoot, tempDir) {
 					console.error(`couldn't get last revision: ${error}`)
 					return
 				}
-				const plusName = path.join(path.dirname(deletedFiles[i]), "-" + path.basename(deletedFiles[i]))
-
-				await writeFile(path.join(tempDir, plusName), deletedContent, 'utf-8')
+				const minusName = path.join(path.dirname(deletedFiles[i]), "-" + path.basename(deletedFiles[i]))
+				await writeFile(path.join(tempDir, minusName), deletedContent, 'utf-8')
 				resolve2()
 			})
 		})
@@ -239,7 +207,6 @@ function amalgamate(newFiles, deletedFiles, changedFiles, gitRoot, tempDir) {
 					console.error(`couldn't get last revision: ${error}`)
 					return
 				}
-				// console.log(diffStr)
 				const arr = diffStr.split("\n")
 				const len = arr.length
 
@@ -263,11 +230,9 @@ function amalgamate(newFiles, deletedFiles, changedFiles, gitRoot, tempDir) {
 					} else if (firstChar === "@") {
 						const minusIdx = text.indexOf("-") + 1
 						subtractionLine = parseInt(text.slice(minusIdx, text.indexOf(","))) - 2
-						// console.log(changedFiles[i])
-						// console.log(subtractionLine)
+
 						const plusIdx = text.indexOf("+") + 1
 						additionLine = parseInt(text.slice(plusIdx, text.indexOf(",", plusIdx))) - 2
-						// console.log(additionLine)
 
 					}
 					additionLine++
@@ -283,9 +248,6 @@ function amalgamate(newFiles, deletedFiles, changedFiles, gitRoot, tempDir) {
 				for (let line = 4; line < subMaxLine; line++) {
 					subArr.push((line in subDict) ? subDict[line] : "")
 				}
-
-				// console.log(addArr)
-				// console.log(subArr)
 
 				const plusName = path.join(path.dirname(changedFiles[i]), "+" + path.basename(changedFiles[i]))
 				writeFile(path.join(tempDir, plusName), addArr.join("\n"), 'utf-8')
