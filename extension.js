@@ -8,8 +8,6 @@ const os = require('os')
 const path = require('path')
 const trash = require('trash')
 
-// var mkdirp = require('mkdirp')
-// var getDirName = path.dirname
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 
@@ -201,12 +199,7 @@ module.exports = {
 	deactivate
 }
 
-// function writeFile(filePath, contents, cb) {
-// mkdirp(getDirName(filePath), (err) => {
-// if (err) return cb(err)
-// fs.writeFile(filePath, contents, cb)
-// })
-// }
+
 /* 
 new Promise(async (resolve) => {
 	resolve()
@@ -323,140 +316,6 @@ function amalgamate(newFiles, deletedFiles, changedFiles, gitRoot, tempDir) {
 	})
 
 }
-
-function copyFiles(arrNewFiles, gitRoot, tempDir) {
-	return new Promise(async (resolve) => {
-		const promises = []
-
-		const length = arrNewFiles.length
-		for (let i = 0; i < length; i++) {
-			promises.push(new Promise((resolve2) => {
-				fs.readFile(path.join(gitRoot, arrNewFiles[i]), async function (err, data) {
-					if (err) throw err
-
-					const plusName = path.join(path.dirname(arrNewFiles[i]), "+" + path.basename(arrNewFiles[i]))
-
-					writeFile(path.join(tempDir, plusName), data, 'utf-8')
-					await resolve2()
-				})
-			}))
-		}
-		await Promise.all(promises)
-		resolve()
-	})
-}
-
-
-function copyDeleted(arrNewFiles, gitRoot, tempDir) {
-	return new Promise(async (resolve) => {
-		const promises = []
-
-		const length = arrNewFiles.length
-		for (let i = 0; i < length; i++) {
-			promises.push(new Promise((resolve2) => {
-				child_process.exec('git show HEAD:' + arrNewFiles[i], { cwd: gitRoot }, (error, deletedContent) => {
-					if (error) {
-						console.error(`couldn't get last revision: ${error}`)
-						return
-					}
-
-					const plusName = path.join(path.dirname(arrNewFiles[i]), "-" + path.basename(arrNewFiles[i]))
-
-					writeFile(path.join(tempDir, plusName), deletedContent, 'utf-8')
-				})
-				resolve2()
-			}))
-		}
-		await Promise.all(promises)
-		resolve()
-	})
-}
-
-
-function twoFilesPerChanged(arrNewFiles, gitRoot, tempDir) {
-	return new Promise(async (resolve) => {
-		const promises = []
-
-		const length = arrNewFiles.length
-		for (let i = 0; i < length; i++) {
-
-			promises.push(new Promise((resolve2) => {
-				child_process.exec('git --no-pager diff "' + arrNewFiles[i] + '"', { cwd: gitRoot }, (error, diffStr) => {
-					if (error) {
-						console.error(`couldn't get last revision: ${error}`)
-						return
-					}
-					// console.log(diffStr)
-					const arr = diffStr.split("\n")
-					const len = arr.length
-
-					var text, firstChar, additionLine = 0, subtractionLine = 0, addMaxLine, subMaxLine
-					const addDict = {}, subDict = {}
-
-					for (let k = 4; k < len; k++) {
-
-						text = arr[k]
-						firstChar = text[0]
-						// console.log(firstChar);
-						if (firstChar === "+") {
-							addDict[additionLine] = text.slice(1)
-							addMaxLine = additionLine
-							subtractionLine--
-						} else if (firstChar === "-") {
-							subDict[subtractionLine] = text.slice(1)
-							subMaxLine = subtractionLine
-							additionLine--
-						} else if (firstChar === "@") {
-							const minusIdx = text.indexOf("-") + 1
-							subtractionLine = parseInt(text.slice(minusIdx, text.indexOf(","))) - 2
-							// console.log(arrNewFiles[i])
-							// console.log(subtractionLine)
-							const plusIdx = text.indexOf("+") + 1
-							additionLine = parseInt(text.slice(plusIdx, text.indexOf(",", plusIdx))) - 2
-							// console.log(additionLine)
-
-						}
-						additionLine++
-						subtractionLine++
-					}
-					addMaxLine--; subMaxLine--
-					const addArr = [], subArr = []
-
-					for (let line = 4; line < addMaxLine; line++) {
-						addArr.push((line in addDict) ? addDict[line] : "")
-					}
-
-					for (let line = 4; line < subMaxLine; line++) {
-						subArr.push((line in subDict) ? subDict[line] : "")
-					}
-
-					// console.log(addArr)
-					// console.log(subArr)
-
-					const plusName = path.join(path.dirname(arrNewFiles[i]), "+" + path.basename(arrNewFiles[i]))
-					writeFile(path.join(tempDir, plusName), addArr.join("\n"), 'utf-8')
-
-					const minusName = path.join(path.dirname(arrNewFiles[i]), "-" + path.basename(arrNewFiles[i]))
-					writeFile(path.join(tempDir, minusName), subArr.join("\n"), 'utf-8')
-				})
-				resolve2()
-			}))
-
-
-		}
-		await Promise.all(promises)
-		resolve()
-	})
-
-
-}
-
-// function copyFile(readPath, writePath, encoding) {
-// fs.readFile(readPath, encoding, function (err, data) {
-// if (err) throw err
-// writeFile(writePath, data, encoding)
-// })
-// }
 
 function writeFile(filePath, contents, encoding) {
 	fs.promises.mkdir(path.dirname(filePath), { recursive: true }).then(() => fs.promises.writeFile(filePath, contents, encoding))
