@@ -1,5 +1,4 @@
 ## create Diff Folder so you can search in many files using vscode
-___
 ### clone, get the vsix, install vsix:\
 `git clone https://github.com/FuPeiJiang/vscode_git-search-in-changes.git`\
 `cd vscode_git-search-in-changes`\
