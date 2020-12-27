@@ -1,4 +1,7 @@
 ## create Diff Folder so you can search in many files using vscode
+currently can only search in the diff of unstaged changes (uncomitted).
+
+
 ### clone, get the vsix, install vsix:<br/>
 `git clone https://github.com/FuPeiJiang/vscode_git-search-in-changes.git`\
 `cd vscode_git-search-in-changes`\
