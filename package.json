@@ -25,6 +25,7 @@
 		}]
 	},
 	"scripts": {
+		"ext": "webpack --mode production && vsce package -o git-search-in-changes.vsix && code --install-extension git-search-in-changes.vsix",
 		"vsix": "webpack --mode production && vsce package -o git-search-in-changes.vsix",
 		"package": "vsce package -o git-search-in-changes.vsix",
 		"webpack:prod": "webpack --mode production",
